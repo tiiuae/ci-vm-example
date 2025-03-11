@@ -79,7 +79,40 @@ in
       ];
     };
     vm-jenkins-controller = inputs.nixpkgs.lib.nixosSystem {
-      inherit specialArgs;
+      specialArgs = {
+        inherit inputs self;
+        ephemeralBuilders = false;
+      };
+      modules = [
+        (import ./vm-nixos-qemu.nix {
+          disk_gb = 200;
+          vcpus = 4;
+          ram_gb = 16;
+        })
+        self.nixosModules.nixos-jenkins-controller
+        {
+          nixpkgs.hostPlatform = "x86_64-linux";
+          # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/virtualisation/qemu-vm.nix
+          virtualisation.vmVariant.virtualisation.forwardPorts = [
+            {
+              from = "host";
+              host.port = 8081;
+              guest.port = 8081;
+            }
+            {
+              from = "host";
+              host.port = 2222;
+              guest.port = 22;
+            }
+          ];
+        }
+      ];
+    };
+    vm-jenkins-controller-ephemeral = inputs.nixpkgs.lib.nixosSystem {
+      specialArgs = {
+        inherit inputs self;
+        ephemeralBuilders = true;
+      };
       modules = [
         (import ./vm-nixos-qemu.nix {
           disk_gb = 200;

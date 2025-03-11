@@ -91,6 +91,10 @@ in
         type = "app";
         program = run-vm-with-share pkgs self.nixosConfigurations.vm-jenkins-controller.config;
       };
+      run-vm-jenkins-controller-ephemeral = {
+        type = "app";
+        program = run-vm-with-share pkgs self.nixosConfigurations.vm-jenkins-controller-ephemeral.config;
+      };
     };
   flake.apps."aarch64-linux" =
     let

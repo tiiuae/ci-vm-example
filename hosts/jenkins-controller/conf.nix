@@ -3,6 +3,7 @@
   self,
   inputs,
   lib,
+  ephemeralBuilders,
   ...
 }:
 let
@@ -204,8 +205,18 @@ in
       rm -fr /root/.ssh/known_hosts
 
       mkdir -p /etc/nix
-      echo "ssh://ephemeral-build4 x86_64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >/etc/nix/machines
-      echo "ssh://ephemeral-hetzarm aarch64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >>/etc/nix/machines
+      ${
+        if ephemeralBuilders then
+          ''
+            echo "ssh://ephemeral-build4 x86_64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >/etc/nix/machines
+            echo "ssh://ephemeral-hetzarm aarch64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >>/etc/nix/machines
+          ''
+        else
+          ''
+            echo "ssh://build4.vedenemo.dev x86_64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >/etc/nix/machines
+            echo "ssh://hetzarm.vedenemo.dev aarch64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >>/etc/nix/machines
+          ''
+      }
     '';
   };
 
@@ -224,6 +235,7 @@ in
       local_port="3022"
       ${run-builder-vm} "$remote" "$nix_target" "$local_port"
     '';
+    enable = if ephemeralBuilders then true else false;
   };
 
   systemd.services.builder-vm-aarch-start = {
@@ -241,6 +253,7 @@ in
       local_port="4022"
       ${run-builder-vm} "$remote" "$nix_target" "$local_port"
     '';
+    enable = if ephemeralBuilders then true else false;
   };
 
   # Enable early out-of-memory killing.
@@ -264,13 +277,24 @@ in
   boot.kernel.sysctl."vm.overcommit_memory" = "1";
 
   nix.extraOptions = ''
-    trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
-    substituters = https://cache.nixos.org
     connect-timeout = 5
     system-features = nixos-test benchmark big-parallel kvm
-    builders-use-substitutes = false
     builders = @/etc/nix/machines
     max-jobs = 0
+    ${
+      if ephemeralBuilders then
+        ''
+          trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+          substituters = https://cache.nixos.org
+          builders-use-substitutes = false
+        ''
+      else
+        ''
+          trusted-public-keys = prod-cache.vedenemo.dev~1:JcytRNMJJdYJVQCYwLNsrfVhct5dhCK2D3fa6O1WHOI= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+          substituters = https://prod-cache.vedenemo.dev https://cache.nixos.org
+          builders-use-substitutes = true
+        ''
+    }
   '';
   programs.ssh = {
 
