@@ -17,6 +17,7 @@
   virtualisation.vmVariant.virtualisation.writableStoreUseTmpfs = false;
   virtualisation.vmVariant.virtualisation.qemu.options = [
     "-device virtio-balloon"
+    "-enable-kvm"
   ];
   virtualisation.vmVariant.zramSwap = {
     enable = true;
