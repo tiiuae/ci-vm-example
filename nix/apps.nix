@@ -9,7 +9,7 @@ let
     (pkgs.writeShellScript "decrypt-sops-key" ''
       set -eu
       on_err () {
-        echo "[+] Failed decrypting sops key: VM will boot-up without secrets"
+        printf "\n[+] Failed decrypting sops key: VM will boot-up without secrets\n"
         # Wait for user input if stdout is to a terminal (and not to file or pipe)
         if [ -t 1 ]; then
           echo; read -n 1 -srp "Press any key to continue"; echo
@@ -33,14 +33,14 @@ let
   run-vm-with-share =
     pkgs: cfg:
     (pkgs.writeShellScriptBin "run-vm-with-share" ''
-      set -eu
+      set -u
       echo "[+] Running '$(realpath "$0")'"
       # Host path of the shr share directory
       sharedir="${cfg.virtualisation.vmVariant.virtualisation.sharedDirectories.shr.source}"
       # See nixpkgs: virtualisation/qemu-vm.nix
       export TMPDIR="$sharedir"
       on_exit () {
-        echo "[+] Removing '$sharedir'"
+        printf "\n[+] Removing '$sharedir'\n"
         rm -fr "$sharedir"
       }
       trap on_exit EXIT
@@ -65,7 +65,7 @@ let
         export TMPDIR="$(mktemp --directory --suffix .nix-vm-tmpdir)"
       fi
       on_exit () {
-        echo "[+] Removing '$TMPDIR'"
+        printf "\n[+] Removing '$TMPDIR'\n"
         rm -fr "$TMPDIR"
       }
       trap on_exit EXIT
