@@ -228,3 +228,14 @@ Nix devshell in this flake provides a helper [`update-sops-files`](https://githu
 2025/03/13 15:28:41 Syncing keys for file /.../ci-vm-example/hosts/jenkins-controller/secrets.yaml
 2025/03/13 15:28:41 File /.../ci-vm-example/hosts/jenkins-controller/secrets.yaml already up to date
 ```
+
+
+## Other considerations
+
+### microvm.nix
+We also trialed using [microvm.nix](https://github.com/astro/microvm.nix) instead of nixpkgs [qemu-vm.nix](https://github.com/NixOS/nixpkgs/blob/ecf6d0c2884d24a6216fd0e15034f455792dbe68/nixos/modules/virtualisation/qemu-vm.nix#L1-L5), which is what this project is [currently using](https://github.com/tiiuae/ci-vm-example/blob/9fdf2cfe1956a6fcb3a9012bb71b613c01328289/nix/apps.nix#L73).
+The microvm.nix trial is available [here](https://github.com/henrirosten/microvm-example/blob/8b90af8a454b7391bd75dc28dabbc56892a075a2/hosts/default.nix#L90-L117).
+
+In a quick test, we failed to make microvm.nix work with `.qcow2` disks; we would want the disk image to grow as data is added instead of allocating the whole image file upfront. There's a trial [here](https://github.com/henrirosten/microvm-example/blob/8995373aa3da9ff110611a1c7f23403ef4fc2b10/hosts/vm-microvm-qemu.nix#L36) that tries to make microvm.nix work with a `.qcow2` disk, however it would require more work to make it boot properly.
+
+We also failed to make the microvm.nix shares work so that a microvm.nix qemu VM could boot-up with stable ssh key, the same way this project currently does with qemu-vm.nix shares. There's a trial [here](https://github.com/henrirosten/microvm-example/blob/0d123035d2ad88c5d08d843dd48ef3822c3c3926/hosts/vm-microvm-qemu.nix#L29-L36).
