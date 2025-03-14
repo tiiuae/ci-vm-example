@@ -227,7 +227,16 @@ in
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
       RemainAfterExit = true;
+      # Replace "no" with "always" to enable the below mentioned restart logic.
+      # Restart is disabled currently to prevent fail2ban from blocking us
+      # in case of failure.
       Restart = "no";
+      # Try re-start at 30 seconds intervals.
+      # If there are more than 3 restart attempts in a 240 second interval,
+      # wait for the 240 second interval to pass before another re-try.
+      RestartSec = 30;
+      StartLimitBurst = 3;
+      StartLimitIntervalSec = 240;
     };
     script = ''
       remote="build4.vedenemo.dev"
@@ -245,7 +254,16 @@ in
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
       RemainAfterExit = true;
+      # Replace "no" with "always" to enable the below mentioned restart logic.
+      # Restart is disabled currently to prevent fail2ban from blocking us
+      # in case of failure.
       Restart = "no";
+      # Try re-start at 30 seconds intervals.
+      # If there are more than 3 restart attempts in a 240 second interval,
+      # wait for the 240 second interval to pass before another re-try.
+      RestartSec = 30;
+      StartLimitBurst = 3;
+      StartLimitIntervalSec = 240;
     };
     script = ''
       remote="hetzarm.vedenemo.dev"
