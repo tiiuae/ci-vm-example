@@ -14,7 +14,7 @@ Proof-of-conecpt to trial the following:
 ❯ nix run github:tiiuae/ci-vm-example#run-vm-jenkins-controller-ephemeral
 ```
 
-Alternatively, to run the locally cloned version of this repo:
+Alternatively, to run a locally cloned version of this repo:
 ```
 ❯ nix run .#run-vm-jenkins-controller-ephemeral
 ```
@@ -38,7 +38,7 @@ Make sure to also read the section [Secrets](#secrets) to understand how secrets
 On running each target, a disk file (`.qcow2`) will be created on the host's current working directory.
 Any state data accumulated on the VM will persist as long as the associated disk file is not removed.
 For instance, changes to each virtual machine's `/nix/store` will persist reboots as long as the disk file is not removed between the VM boot cycles.
-Similarly, each VM state can be cleared by removing the disk file.
+Similarly, each VM state can be cleared by removing the VM disk file on the host.
 
 Following sections explain the main points demonstrated in each apps target:
 - [run-vm-builder-demo](#run-vm-builder-demo)
@@ -61,7 +61,7 @@ Here's how it looks on a diagram after running `nix run .#run-vm-builder-demo`:
 <br />
 
 ### run-vm-builder
-[`run-vm-builder`](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/nix/apps.nix#L82) is otherwise the same as [`run-vm-builder-demo`](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/nix/apps.nix#L86) but bumps-up the Qemu [ram, vcpu, and max disk size](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/default.nix#L41-L43). Additionaly, there's a separate [`run-vm-builder`](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/default.nix#L59) target for aarch64 to support aarch64 hosts.
+[`run-vm-builder`](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/nix/apps.nix#L82) is otherwise the same as [`run-vm-builder-demo`](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/nix/apps.nix#L86) but bumps-up the Qemu [ram, vcpu, and max disk size](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/default.nix#L41-L43). Additionaly, there's a separate [`run-vm-builder`](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/default.nix#L59) target for aarch64 to support builder VMs on aarch64 hosts.
 
 
 ### run-vm-jenkins-controller
@@ -101,7 +101,7 @@ Each host's private ssh key is also stored as [sops secret](https://github.com/t
 
 `secrets.yaml` files are created and edited with the `sops` utility. The [`.sops.yaml`](.sops.yaml) file tells sops what secrets get encrypted with what keys.
 
-The `run-vm` app targets in this flake can be run by anyone, but only when run by a user that has the age keys declared in [`.sops.yaml`](.sops.yaml) do the secrets get decrypted. In all other cases, the [user is notified](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/nix/apps.nix#L12-L16) and the VM will boot-up without secrets as shown below:
+The `run-vm` app targets in this flake can be run by anyone, but only when run by a user that owns the secret key of one of the age public keys declared in [`.sops.yaml`](.sops.yaml) do the secrets get decrypted. In all other cases, the [user is notified](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/nix/apps.nix#L12-L16) and the VM will boot-up without secrets as shown below:
 
 ```bash
 ❯ nix run .#run-vm-jenkins-controller
@@ -129,7 +129,7 @@ but none were.
 Press any key to continue
 ```
 
-When run by a user that can decrypt the `ssh_host_ed25519_key` secret for the target VM, sops will install the secret on boot-up:
+When run by a user that can decrypt the `ssh_host_ed25519_key` secret for the target VM, sops will install the secrets on boot-up:
 
 ```
 [root@jenkins-controller:~]# journalctl | grep sops
@@ -233,7 +233,7 @@ Nix devshell in this flake provides a helper [`update-sops-files`](https://githu
 ## Other considerations
 
 ### microvm.nix
-We also trialed using [microvm.nix](https://github.com/astro/microvm.nix) instead of nixpkgs [qemu-vm.nix](https://github.com/NixOS/nixpkgs/blob/ecf6d0c2884d24a6216fd0e15034f455792dbe68/nixos/modules/virtualisation/qemu-vm.nix#L1-L5), which is what this project is [currently using](https://github.com/tiiuae/ci-vm-example/blob/9fdf2cfe1956a6fcb3a9012bb71b613c01328289/nix/apps.nix#L73).
+We also trialed using [microvm.nix](https://github.com/astro/microvm.nix) instead of the nixpkgs [qemu-vm.nix](https://github.com/NixOS/nixpkgs/blob/ecf6d0c2884d24a6216fd0e15034f455792dbe68/nixos/modules/virtualisation/qemu-vm.nix#L1-L5) (which is what this project is [currently using](https://github.com/tiiuae/ci-vm-example/blob/9fdf2cfe1956a6fcb3a9012bb71b613c01328289/nix/apps.nix#L73)).
 The microvm.nix trial is available [here](https://github.com/henrirosten/microvm-example/blob/8b90af8a454b7391bd75dc28dabbc56892a075a2/hosts/default.nix#L90-L117).
 
 In a quick test, we failed to make microvm.nix work with `.qcow2` disks; we would want the disk image to grow as data is added instead of allocating the whole image file upfront. There's a trial [here](https://github.com/henrirosten/microvm-example/blob/8995373aa3da9ff110611a1c7f23403ef4fc2b10/hosts/vm-microvm-qemu.nix#L36) that tries to make microvm.nix work with a `.qcow2` disk, however it would require more work to make it boot properly.
