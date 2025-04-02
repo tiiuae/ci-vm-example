@@ -83,9 +83,13 @@ in
         type = "app";
         program = run-vm pkgs self.nixosConfigurations.vm-builder-x86.config;
       };
-      run-vm-builder-demo = {
+      run-vm-builder-small-1 = {
         type = "app";
-        program = run-vm pkgs self.nixosConfigurations.vm-builder-x86-demo.config;
+        program = run-vm pkgs self.nixosConfigurations.vm-builder-x86-small-1.config;
+      };
+      run-vm-builder-small-2 = {
+        type = "app";
+        program = run-vm pkgs self.nixosConfigurations.vm-builder-x86-small-2.config;
       };
       run-vm-jenkins-controller = {
         type = "app";

@@ -1,6 +1,7 @@
 {
   inputs,
   self,
+  lib,
   ...
 }:
 let
@@ -16,18 +17,42 @@ in
   };
 
   flake.nixosConfigurations = {
-    vm-builder-x86-demo = inputs.nixpkgs.lib.nixosSystem {
+    vm-builder-x86-small-1 = inputs.nixpkgs.lib.nixosSystem {
       inherit specialArgs;
       modules = [
         (import ./vm-nixos-qemu.nix { })
         self.nixosModules.nixos-builder
         {
+          networking = {
+            hostName = lib.mkForce "small-1";
+          };
           nixpkgs.hostPlatform = "x86_64-linux";
           # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/virtualisation/qemu-vm.nix
           virtualisation.vmVariant.virtualisation.forwardPorts = [
             {
               from = "host";
               host.port = 2322;
+              guest.port = 22;
+            }
+          ];
+        }
+      ];
+    };
+    vm-builder-x86-small-2 = inputs.nixpkgs.lib.nixosSystem {
+      inherit specialArgs;
+      modules = [
+        (import ./vm-nixos-qemu.nix { })
+        self.nixosModules.nixos-builder
+        {
+          networking = {
+            hostName = lib.mkForce "small-2";
+          };
+          nixpkgs.hostPlatform = "x86_64-linux";
+          # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/virtualisation/qemu-vm.nix
+          virtualisation.vmVariant.virtualisation.forwardPorts = [
+            {
+              from = "host";
+              host.port = 2422;
               guest.port = 22;
             }
           ];
