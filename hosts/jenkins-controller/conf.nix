@@ -208,12 +208,12 @@ in
       ${
         if ephemeralBuilders then
           ''
-            echo "ssh://ephemeral-build4 x86_64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >/etc/nix/machines
+            echo "ssh://ephemeral-build2 x86_64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >/etc/nix/machines
             echo "ssh://ephemeral-hetzarm aarch64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >>/etc/nix/machines
           ''
         else
           ''
-            echo "ssh://build4.vedenemo.dev x86_64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >/etc/nix/machines
+            echo "ssh://build2.vedenemo.dev x86_64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >/etc/nix/machines
             echo "ssh://hetzarm.vedenemo.dev aarch64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >>/etc/nix/machines
           ''
       }
@@ -239,7 +239,7 @@ in
       StartLimitIntervalSec = 240;
     };
     script = ''
-      remote="build4.vedenemo.dev"
+      remote="build2.vedenemo.dev"
       nix_target="apps.x86_64-linux.run-vm-builder"
       local_port="3022"
       ${run-builder-vm} "$remote" "$nix_target" "$local_port"
@@ -317,22 +317,20 @@ in
   programs.ssh = {
 
     # Known builder host public keys, these go to /root/.ssh/known_hosts
-    knownHosts."build4.vedenemo.dev".publicKey =
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrLRVAi7dDXUF1EFTd7oHLyolxFSkE6MROXvIM+UqDo";
-    knownHosts."builder.vedenemo.dev".publicKey =
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHSI8s/wefXiD2h3I3mIRdK+d9yDGMn0qS5fpKDnSGqj";
+    knownHosts."build2.vedenemo.dev".publicKey =
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILL40b7SbAcL1MK3D5U9IgVRR87myFLTzVdryQnVqb7p";
     knownHosts."hetzarm.vedenemo.dev".publicKey =
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILx4zU4gIkTY/1oKEOkf9gTJChdx/jR3lDgZ7p/c7LEK";
 
     # Custom options to /etc/ssh/ssh_config
     extraConfig = lib.mkAfter ''
-      # VM we spin-up on build4.vedenemo.dev with builder-vm-x86-start service
-      Host ephemeral-build4
+      # VM we spin-up on build2.vedenemo.dev with builder-vm-x86-start service
+      Host ephemeral-build2
       Hostname localhost
       Port 3022
       User remote-builder
       IdentityFile /run/secrets/id_builder
-      # We check the build4.vedenemo.dev key already
+      # We check the build2.vedenemo.dev key already
       StrictHostKeyChecking no
 
       # VM we spin-up on hetzarm.vedenemo.dev with builder-vm-aarch-start service
@@ -344,13 +342,8 @@ in
       # We check the hetzarm.vedenemo.dev key already
       StrictHostKeyChecking no
 
-      Host builder.vedenemo.dev
-      Hostname builder.vedenemo.dev
-      User remote-build
-      IdentityFile /run/secrets/remote_build_ssh_key
-
-      Host build4.vedenemo.dev
-      Hostname build4.vedenemo.dev
+      Host build2.vedenemo.dev
+      Hostname build2.vedenemo.dev
       User remote-build
       IdentityFile /run/secrets/remote_build_ssh_key
 
