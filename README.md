@@ -70,7 +70,7 @@ Here's how it looks on a diagram after running `nix run .#run-vm-builder-demo`:
 From there on, [sops-nix](https://github.com/Mic92/sops-nix) takes care of decrypting the secrets when the guest VM boots-up.
 - Runs host nixosConfiguration [`vm-jenkins-controller`](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/default.nix#L81) with [`ephemeralBuilders`](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/default.nix#L84) set to `false`:
    - `build2` and `hetzarm` are configured as [remote builders](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/jenkins-controller/conf.nix#L216-L217).
-   - https://prod-cache.vedenemo.dev is configured as [additional trusted nix binary cache](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/jenkins-controller/conf.nix#L293-L295), in addition to nixos.org cache.
+   - https://ghaf-dev.cachix.org is configured as [additional trusted nix binary cache](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/jenkins-controller/conf.nix#L293-L295), in addition to nixos.org cache.
    - `max-jobs` [is set to 0](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/jenkins-controller/conf.nix#L283), making nix dispatch all builds to remote builders specified in `/nix/etc/machines` and not build anything locally.
 
 Here's how it looks on a diagram after running `nix run .#run-vm-jenkins-controller`:
