@@ -1,4 +1,6 @@
-commons-compress-api
+# pinned dependencies
+bootstrap5-api:5.3.3-2 # 5.3.3-3 requires jenkins 2.496
+# plugins
 configuration-as-code
 workflow-aggregator
 github
@@ -14,3 +16,5 @@ pipeline-build-step
 copyartifact
 robot
 lockable-resources
+reverse-proxy-auth-plugin
+matrix-auth
