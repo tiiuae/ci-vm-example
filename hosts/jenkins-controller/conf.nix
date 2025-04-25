@@ -93,8 +93,6 @@ in
       # Disable script approval
       # https://plugins.jenkins.io/robot/#plugin-content-log-file-not-showing-properly
       "-Dhudson.model.DirectoryBrowserSupport.CSP=\"sandbox allow-scripts; default-src 'none'; img-src 'self' data: ; style-src 'self' 'unsafe-inline' data: ; script-src 'self' 'unsafe-inline' 'unsafe-eval';\""
-      # Disable the intitial setup wizard, and the creation of initialAdminPassword.
-      "-Djenkins.install.runSetupWizard=false"
       # Point to configuration-as-code config
       "-Dcasc.jenkins.config=${jenkins-casc}"
     ];
@@ -112,7 +110,7 @@ in
 
   # Install jenkins plugins, apply initial jenkins config
   systemd.services.jenkins-config = {
-    after = [ "jenkins-job-builder.service" ];
+    after = [ "jenkins.service" ];
     wantedBy = [ "multi-user.target" ];
     # Make `jenkins-cli` available
     path = with pkgs; [ jenkins ];
@@ -128,19 +126,12 @@ in
     script =
       let
         jenkins-auth = "-auth admin:\"$(cat /var/lib/jenkins/secrets/initialAdminPassword)\"";
-
-        # disable initial setup, which needs to happen *after* all jenkins-cli setup.
-        # otherwise we won't have initialAdminPassword.
-        # Disabling the setup wizard cannot happen from configuration-as-code either.
         jenkins-groovy = pkgs.writeText "groovy" ''
           #!groovy
-
           import jenkins.model.*
           import hudson.util.*;
           import jenkins.install.*;
-
           def instance = Jenkins.getInstance()
-
           instance.setInstallState(InstallState.INITIAL_SETUP_COMPLETED)
           instance.save()
         '';
@@ -148,6 +139,9 @@ in
       ''
         # Disable initial install
         jenkins-cli ${jenkins-auth} groovy = < ${jenkins-groovy}
+
+        # Initial pipeline trigger
+        jenkins-cli ${jenkins-auth} build on-prem-test-pipeline -v -w
 
         # Restart jenkins
         jenkins-cli ${jenkins-auth} safe-restart

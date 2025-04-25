@@ -1,40 +1,46 @@
 
 jobs:
   - script: >
-      pipelineJob('test-pipeline') {
+      pipelineJob('on-prem-test-pipeline') {
         definition {
           cps {
             script(
             '''
             def REPO_URL = 'https://github.com/tiiuae/ghaf/'
             def WORKDIR  = 'ghaf'
-            def DEF_GITREF = 'main'
             properties([
               githubProjectProperty(displayName: '', projectUrlStr: REPO_URL),
               parameters([
-                string(name: 'GITREF', defaultValue: DEF_GITREF, description: 'Ghaf git reference (Commit/Branch/Tag)')
+                string(name: 'GITREF', defaultValue: 'main', description: 'Git reference (Commit/Branch/Tag)'),
+                booleanParam(name: 'RELOAD_ONLY', defaultValue: true, description: 'Reload pipeline configuration without running any other stages')
               ])
             ])
             pipeline {
               agent { label 'built-in' }
               options {
-                timestamps ()
                 buildDiscarder(logRotator(numToKeepStr: '100'))
               }
-              environment {
-                // https://stackoverflow.com/questions/46680573
-                GITREF = params.getOrDefault('GITREF', DEF_GITREF)
-              }
               stages {
+                stage('Reload only') {
+                  when { expression { params.RELOAD_ONLY } }
+                  steps {
+                    script {
+                      currentBuild.result = 'ABORTED'
+                      println 'Pipeline configuration reloaded'
+                    }
+                  }
+                }
                 stage('Checkout') {
+                  when { expression { !params.RELOAD_ONLY } }
                   steps {
                     dir(WORKDIR) {
                       checkout scmGit(
-                        branches: [[name: env.GITREF]],
+                        branches: [[name: params.GITREF]],
                         extensions: [[$class: 'WipeWorkspace']],
                         userRemoteConfigs: [[url: REPO_URL]]
                       )
                       script {
+                        println("params: $params")
                         env.TARGET_REPO = sh(script: 'git remote get-url origin', returnStdout: true).trim()
                         env.TARGET_COMMIT = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
                       }
