@@ -7,7 +7,7 @@
   ...
 }:
 let
-  jenkins-casc = ./jenkins-casc.yaml;
+  jenkins-casc = ./casc;
   run-builder-vm = pkgs.writeShellScript "run-builder-vm" ''
     set -eu
     remote="$1"
@@ -93,51 +93,11 @@ in
       # Point to configuration-as-code config
       "-Dcasc.jenkins.config=${jenkins-casc}"
     ];
-
     plugins = import ./plugins.nix { inherit (pkgs) stdenv fetchurl; };
-
-    # Configure jenkins job(s):
-    # https://jenkins-job-builder.readthedocs.io/en/latest/project_pipeline.html
-    # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/continuous-integration/jenkins/job-builder.nix
-    jobBuilder = {
-      enable = true;
-      nixJobs = [
-        {
-          job = {
-            name = "shell-test-job";
-            builders = [
-              {
-                shell = ''
-                  echo "Running job-1"
-                  echo "Second line"
-                '';
-              }
-            ];
-          };
-        }
-        {
-          job = {
-            # This will not work
-            name = "groovy-test-job";
-            builders = [
-              {
-                groovy = {
-                  file = ./test-pipeline.groovy;
-                };
-              }
-            ];
-          };
-        }
-      ];
-    };
   };
+
   systemd.services.jenkins.serviceConfig = {
     Restart = "on-failure";
-  };
-
-  systemd.services.jenkins-job-builder.serviceConfig = {
-    Restart = "on-failure";
-    RestartSec = 5;
   };
 
   # set StateDirectory=jenkins, so state volume has the right permissions

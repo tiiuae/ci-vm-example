@@ -3,9 +3,7 @@ jenkins:
   # https://plugins.jenkins.io/github-oauth/
   # requires admin to trigger builds or manage jenkins
   # allowing read access for anonymous users:
-  authorizationStrategy:
-    loggedInUsersCanDoAnything:
-      allowAnonymousRead: true
+  authorizationStrategy: unsecured
 
   numExecutors: 4
 
@@ -45,6 +43,10 @@ jenkins:
       name: "riscv"
       remoteFS: "/var/lib/jenkins/agents/riscv"
       retentionStrategy: "always"
+
+security:
+  globaljobdslsecurityconfiguration:
+    useScriptSecurity: false
 
 appearance:
   pipelineGraphView:
