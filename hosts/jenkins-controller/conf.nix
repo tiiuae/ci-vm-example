@@ -101,34 +101,34 @@ in
     # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/continuous-integration/jenkins/job-builder.nix
     jobBuilder = {
       enable = true;
-      nixJobs =
-        lib.mapAttrsToList
-          (display-name: script: {
-            job = {
-              inherit display-name;
-              name = script;
-              project-type = "pipeline";
-              concurrent = true;
-              pipeline-scm = {
-                script-path = "${script}.groovy";
-                lightweight-checkout = true;
-                scm = [
-                  {
-                    git = {
-                      url = "https://github.com/tiiuae/ghaf-jenkins-pipeline.git";
-                      clean = true;
-                      branches = [ "*/main" ];
-                    };
-                  }
-                ];
-              };
-            };
-          })
-          {
-            "Ghaf main pipeline" = "ghaf-main-pipeline";
-            "Ghaf nightly pipeline" = "ghaf-nightly-pipeline";
-            "Ghaf release pipeline" = "ghaf-release-pipeline";
+      nixJobs = [
+        {
+          job = {
+            name = "shell-test-job";
+            builders = [
+              {
+                shell = ''
+                  echo "Running job-1"
+                  echo "Second line"
+                '';
+              }
+            ];
           };
+        }
+        {
+          job = {
+            # This will not work
+            name = "groovy-test-job";
+            builders = [
+              {
+                groovy = {
+                  file = ./test-pipeline.groovy;
+                };
+              }
+            ];
+          };
+        }
+      ];
     };
   };
   systemd.services.jenkins.serviceConfig = {

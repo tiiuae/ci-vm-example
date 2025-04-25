@@ -1,0 +1,49 @@
+// SPDX-FileCopyrightText: 2025 TII (SSRC) and the Ghaf contributors
+// SPDX-License-Identifier: Apache-2.0
+
+////////////////////////////////////////////////////////////////////////////////
+
+def REPO_URL = 'https://github.com/tiiuae/ghaf/'
+def WORKDIR  = 'ghaf'
+def DEF_GITREF = 'main'
+
+properties([
+  githubProjectProperty(displayName: '', projectUrlStr: REPO_URL),
+  parameters([
+    string(name: 'GITREF', defaultValue: DEF_GITREF, description: 'Ghaf git reference (Commit/Branch/Tag)')
+  ])
+])
+
+////////////////////////////////////////////////////////////////////////////////
+
+pipeline {
+  agent { label 'built-in' }
+  options {
+    timestamps ()
+    buildDiscarder(logRotator(numToKeepStr: '100'))
+  }
+  environment {
+    // https://stackoverflow.com/questions/46680573
+    GITREF = params.getOrDefault('GITREF', DEF_GITREF)
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        dir(WORKDIR) {
+          checkout scmGit(
+            branches: [[name: env.GITREF]],
+            extensions: [[$class: 'WipeWorkspace']],
+            userRemoteConfigs: [[url: REPO_URL]]
+          )
+          script {
+            env.TARGET_REPO = sh(script: 'git remote get-url origin', returnStdout: true).trim()
+            env.TARGET_COMMIT = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+            env.ARTIFACTS_REMOTE_PATH = "${env.JOB_NAME}/build_${env.BUILD_ID}-commit_${env.TARGET_COMMIT}"
+          }
+        }
+      }
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
