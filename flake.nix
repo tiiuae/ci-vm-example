@@ -20,6 +20,12 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    jenkinsPlugins2nix = {
+      url = "github:Fuuzetsu/jenkinsPlugins2nix";
+      inputs = {
+        flake-utils.follows = "flake-utils";
+      };
+    };
   };
 
   outputs =
