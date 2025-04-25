@@ -1,8 +1,5 @@
 jenkins:
-  # TODO: sort out jenkins authentication e.g.:
-  # https://plugins.jenkins.io/github-oauth/
-  # requires admin to trigger builds or manage jenkins
-  # allowing read access for anonymous users:
+  # TODO: sort out jenkins authentication
   authorizationStrategy: unsecured
 
   numExecutors: 4
@@ -11,10 +8,6 @@ jenkins:
   markupFormatter:
     rawHtml:
       disableSyntaxHighlighting: false
-
-security:
-  globaljobdslsecurityconfiguration:
-    useScriptSecurity: false
 
 appearance:
   pipelineGraphView:
