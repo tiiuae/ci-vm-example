@@ -22,16 +22,17 @@ jobs:
               }
               stages {
                 stage('Reload only') {
-                  when { expression { params.RELOAD_ONLY } }
+                  when { expression { !params || params.RELOAD_ONLY } }
                   steps {
                     script {
                       currentBuild.result = 'ABORTED'
                       println 'Pipeline configuration reloaded'
+                      env.ABORTED = 'true'
                     }
                   }
                 }
                 stage('Checkout') {
-                  when { expression { !params.RELOAD_ONLY } }
+                  when { expression { env.ABORTED != 'true' } }
                   steps {
                     dir(WORKDIR) {
                       checkout scmGit(
