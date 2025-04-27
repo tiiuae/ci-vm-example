@@ -4,7 +4,7 @@
     inputs.devshell.flakeModule
   ];
   perSystem =
-    { pkgs, ... }:
+    { pkgs, inputs', ... }:
     {
       devshells = {
         default = {
@@ -16,6 +16,8 @@
               reuse
               sops
               ssh-to-age
+            ] ++ [
+              inputs'.jenkinsPlugins2nix.packages.jenkinsPlugins2nix
             ];
           };
           commands = [
