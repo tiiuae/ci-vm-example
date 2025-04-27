@@ -1,6 +1,6 @@
 jobs:
   - script: >
-      pipelineJob('test-pipeline') {
+      pipelineJob('on-prem-test-pipeline') {
         definition {
           cps {
             script(

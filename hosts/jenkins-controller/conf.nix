@@ -95,63 +95,50 @@ in
     ];
     plugins = import ./plugins.nix { inherit (pkgs) stdenv fetchurl; };
   };
-  systemd.services.jenkins.serviceConfig = {
-    Restart = "on-failure";
-  };
 
-  systemd.services.jenkins-job-builder.serviceConfig = {
-    Restart = "on-failure";
-    RestartSec = 5;
-  };
-
-  # set StateDirectory=jenkins, so state volume has the right permissions
-  # and we wait on the mountpoint to appear.
-  # https://github.com/NixOS/nixpkgs/pull/272679
-  systemd.services.jenkins.serviceConfig.StateDirectory = "jenkins";
-
-  # Install jenkins plugins, apply initial jenkins config
-  systemd.services.jenkins-config = {
-    after = [ "jenkins-job-builder.service" ];
-    wantedBy = [ "multi-user.target" ];
+  systemd.services.jenkins = {
     # Make `jenkins-cli` available
     path = with pkgs; [ jenkins ];
     # Implicit URL parameter for `jenkins-cli`
     environment = {
       JENKINS_URL = "http://localhost:8081";
     };
-    serviceConfig = {
-      Restart = "on-failure";
-      RestartSec = 5;
-      RequiresMountsFor = "/var/lib/jenkins";
-    };
-    script =
+    postStart =
       let
         jenkins-auth = "-auth admin:\"$(cat /var/lib/jenkins/secrets/initialAdminPassword)\"";
-
-        # disable initial setup, which needs to happen *after* all jenkins-cli setup.
-        # otherwise we won't have initialAdminPassword.
-        # Disabling the setup wizard cannot happen from configuration-as-code either.
+        # Disable setup wizard
         jenkins-groovy = pkgs.writeText "groovy" ''
           #!groovy
-
           import jenkins.model.*
-          import hudson.util.*;
-          import jenkins.install.*;
-
+          import hudson.util.*
+          import jenkins.install.*
           def instance = Jenkins.getInstance()
-
           instance.setInstallState(InstallState.INITIAL_SETUP_COMPLETED)
           instance.save()
+          instance.restart()
         '';
       in
       ''
-        # Disable initial install
+        echo "Waiting jenkins to become online"
+        until jenkins-cli ${jenkins-auth} who-am-i >/dev/null 2>&1; do sleep 1; done
+        echo "Disable setup wizard and restart jenkins"
         jenkins-cli ${jenkins-auth} groovy = < ${jenkins-groovy}
-
-        # Restart jenkins
-        jenkins-cli ${jenkins-auth} safe-restart
+        echo "Waiting jenkins to shutdown"
+        until ! jenkins-cli ${jenkins-auth} who-am-i >/dev/null 2>&1; do sleep 1; done
+        echo "Waiting jenkins to restart"
+        until jenkins-cli ${jenkins-auth} who-am-i >/dev/null 2>&1; do sleep 1; done
+        echo "Triggering pipelines"
+        jenkins-cli ${jenkins-auth} build on-prem-test-pipeline -v -w
       '';
+    serviceConfig = {
+      Restart = "on-failure";
+    };
   };
+
+  # set StateDirectory=jenkins, so state volume has the right permissions
+  # and we wait on the mountpoint to appear.
+  # https://github.com/NixOS/nixpkgs/pull/272679
+  systemd.services.jenkins.serviceConfig.StateDirectory = "jenkins";
 
   systemd.services.populate-builder-machines = {
     wantedBy = [ "multi-user.target" ];
