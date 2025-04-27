@@ -129,6 +129,7 @@ in
         until jenkins-cli ${jenkins-auth} who-am-i >/dev/null 2>&1; do sleep 1; done
         echo "Triggering pipelines"
         jenkins-cli ${jenkins-auth} build on-prem-test-pipeline -v -w
+        jenkins-cli ${jenkins-auth} build on-prem-dummy-pipeline -v -w
       '';
     serviceConfig = {
       Restart = "on-failure";

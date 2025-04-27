@@ -1,0 +1,22 @@
+jobs:
+  - script: >
+      pipelineJob('on-prem-dummy-pipeline') {
+        definition {
+          cps {
+            script(
+            '''
+            pipeline {
+              agent any
+              stages {
+                stage('test sh') {
+                  steps {
+                    sh 'echo Testing'
+                  }
+                }
+              }
+            }
+            '''
+            )
+          }
+        }
+      }
