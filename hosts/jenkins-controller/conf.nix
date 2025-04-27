@@ -7,7 +7,7 @@
   ...
 }:
 let
-  jenkins-casc = ./jenkins-casc.yaml;
+  jenkins-casc = ./casc;
   run-builder-vm = pkgs.writeShellScript "run-builder-vm" ''
     set -eu
     remote="$1"
@@ -93,43 +93,7 @@ in
       # Point to configuration-as-code config
       "-Dcasc.jenkins.config=${jenkins-casc}"
     ];
-
     plugins = import ./plugins.nix { inherit (pkgs) stdenv fetchurl; };
-
-    # Configure jenkins job(s):
-    # https://jenkins-job-builder.readthedocs.io/en/latest/project_pipeline.html
-    # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/services/continuous-integration/jenkins/job-builder.nix
-    jobBuilder = {
-      enable = true;
-      nixJobs =
-        lib.mapAttrsToList
-          (display-name: script: {
-            job = {
-              inherit display-name;
-              name = script;
-              project-type = "pipeline";
-              concurrent = true;
-              pipeline-scm = {
-                script-path = "${script}.groovy";
-                lightweight-checkout = true;
-                scm = [
-                  {
-                    git = {
-                      url = "https://github.com/tiiuae/ghaf-jenkins-pipeline.git";
-                      clean = true;
-                      branches = [ "*/main" ];
-                    };
-                  }
-                ];
-              };
-            };
-          })
-          {
-            "Ghaf main pipeline" = "ghaf-main-pipeline";
-            "Ghaf nightly pipeline" = "ghaf-nightly-pipeline";
-            "Ghaf release pipeline" = "ghaf-release-pipeline";
-          };
-    };
   };
   systemd.services.jenkins.serviceConfig = {
     Restart = "on-failure";
