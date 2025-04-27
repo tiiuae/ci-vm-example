@@ -11,8 +11,11 @@
         package = pkgs.treefmt;
         inherit (config.flake-root) projectRootFile;
         programs = {
-          nixfmt.enable = true;
-          nixfmt.package = pkgs.nixfmt-rfc-style;
+          nixfmt = {
+            enable = true;
+            package = pkgs.nixfmt-rfc-style;
+            excludes = [ "**/plugins.nix" ]; # file is automatically generated
+          };
           deadnix.enable = true;
           statix.enable = true;
           shellcheck.enable = true;

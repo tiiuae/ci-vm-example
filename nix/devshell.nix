@@ -9,16 +9,19 @@
       devshells = {
         default = {
           devshell = {
-            packages = with pkgs; [
-              git
-              nix
-              nixos-rebuild
-              reuse
-              sops
-              ssh-to-age
-            ] ++ [
-              inputs'.jenkinsPlugins2nix.packages.jenkinsPlugins2nix
-            ];
+            packages =
+              with pkgs;
+              [
+                git
+                nix
+                nixos-rebuild
+                reuse
+                sops
+                ssh-to-age
+              ]
+              ++ [
+                inputs'.jenkinsPlugins2nix.packages.jenkinsPlugins2nix
+              ];
           };
           commands = [
             {
