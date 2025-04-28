@@ -1,6 +1,6 @@
 jobs:
   - script: >
-      pipelineJob('on-prem-dummy-pipeline') {
+      pipelineJob('dummy') {
         definition {
           cps {
             script(
@@ -8,9 +8,10 @@ jobs:
             pipeline {
               agent any
               stages {
-                stage('test sh') {
+                stage('Test sh') {
                   steps {
                     sh 'echo Testing'
+                    sh 'pwd'
                   }
                 }
               }

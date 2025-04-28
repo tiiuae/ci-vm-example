@@ -43,8 +43,8 @@ let
 in
 {
   sops.defaultSopsFile = ./secrets.yaml;
-  sops.secrets.id_builder.owner = "root";
-  sops.secrets.remote_build_ssh_key.owner = "root";
+  sops.secrets.id_builder.owner = "jenkins";
+  sops.secrets.remote_build_ssh_key.owner = "jenkins";
   imports =
     [
       inputs.sops-nix.nixosModules.sops
@@ -79,13 +79,9 @@ in
     packages = with pkgs; [
       bashInteractive # 'sh' step in jenkins pipeline requires this
       coreutils
-      nix
       git
-      zstd
-      jq
-      csvkit
-      curl
-      nix-eval-jobs
+      nix
+      openssh
     ];
     extraJavaOptions = [
       # Useful when the 'sh' step fails:
@@ -128,8 +124,8 @@ in
         echo "Waiting jenkins to restart"
         until jenkins-cli ${jenkins-auth} who-am-i >/dev/null 2>&1; do sleep 1; done
         echo "Triggering pipelines"
-        jenkins-cli ${jenkins-auth} build on-prem-test-pipeline -v -w
-        jenkins-cli ${jenkins-auth} build on-prem-dummy-pipeline -v -w
+        jenkins-cli ${jenkins-auth} build dummy -v -w
+        jenkins-cli ${jenkins-auth} build ghaf-slim-demo -v -w
       '';
     serviceConfig = {
       Restart = "on-failure";

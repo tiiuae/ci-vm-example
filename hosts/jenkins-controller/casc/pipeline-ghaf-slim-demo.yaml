@@ -1,11 +1,11 @@
 jobs:
   - script: >
-      pipelineJob('on-prem-test-pipeline') {
+      pipelineJob('ghaf-slim-demo') {
         definition {
           cps {
             script(
             '''
-            def REPO_URL = 'https://github.com/tiiuae/ghaf/'
+            def REPO_URL = 'https://github.com/tiiuae/ghaf-slim-demo/'
             def WORKDIR  = 'ghaf'
             properties([
               githubProjectProperty(displayName: '', projectUrlStr: REPO_URL),
@@ -30,7 +30,7 @@ jobs:
                     }
                   }
                 }
-                stage('Checkout') {
+                stage('Build') {
                   when { expression { env.ABORTED != 'true' } }
                   steps {
                     dir(WORKDIR) {
@@ -40,9 +40,13 @@ jobs:
                         userRemoteConfigs: [[url: REPO_URL]]
                       )
                       script {
-                        println("params: $params")
-                        env.TARGET_REPO = sh(script: 'git remote get-url origin', returnStdout: true).trim()
-                        env.TARGET_COMMIT = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+                        // Single quotes in a script block needs to be escaped due
+                        // to cps script block we are already in
+                        sh \'\'\'
+                          FILTER='^checks.x86_64-linux.*debug$'
+                          OPTS='--remote build2.vedenemo.dev --no-download'
+                          nix develop --command bash -c ".github/nix-fast-build.sh -f \'$FILTER\' -o \'$OPTS\'"
+                        \'\'\'
                       }
                     }
                   }
