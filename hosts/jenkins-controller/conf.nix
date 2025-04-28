@@ -92,6 +92,20 @@ in
     plugins = import ./plugins.nix { inherit (pkgs) stdenv fetchurl; };
   };
 
+  systemd.services.jenkins-pipeline-copy = {
+    before = [ "jenkins.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Restart = "on-failure";
+      RestartSec = 5;
+    };
+    path = with pkgs; [ rsync ];
+    script = ''
+      rsync -a --perms --chmod=D700,F400 --chown=jenkins:jenkins \
+        /shared/source/hosts/jenkins-controller/casc/pipelines /tmp/
+    '';
+  };
+
   systemd.services.jenkins = {
     # Make `jenkins-cli` available
     path = with pkgs; [ jenkins ];
