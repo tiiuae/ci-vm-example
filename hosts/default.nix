@@ -38,9 +38,9 @@ in
       inherit specialArgs;
       modules = [
         (import ./vm-nixos-qemu.nix {
-          disk_gb = 200;
-          vcpus = 20;
-          ram_gb = 40;
+          disk_gb = 300;
+          vcpus = 50;
+          ram_gb = 100;
         })
         self.nixosModules.nixos-builder
         {
