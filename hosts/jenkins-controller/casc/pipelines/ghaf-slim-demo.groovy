@@ -38,8 +38,8 @@ pipeline {
           script {
             sh '''
               FILTER='^checks.x86_64-linux.*debug$'
-              OPTS='--remote build2.vedenemo.dev --no-download'
-              nix develop --command bash -c ".github/nix-fast-build.sh -f \'$FILTER\' -o \'$OPTS\'"
+              OPTS='--remote build2.vedenemo.dev --no-download --skip-cached --option accept-flake-config true'
+              .github/nix-fast-build.sh -f "$FILTER" -o "$OPTS"
             '''
           }
         }
