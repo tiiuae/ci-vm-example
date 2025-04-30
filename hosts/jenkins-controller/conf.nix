@@ -43,8 +43,8 @@ let
 in
 {
   sops.defaultSopsFile = ./secrets.yaml;
-  sops.secrets.id_builder.owner = "jenkins";
-  sops.secrets.remote_build_ssh_key.owner = "jenkins";
+  sops.secrets.vm_builder_ssh_key.owner = "jenkins";
+  sops.secrets.vedenemo_builder_ssh_key.owner = "jenkins";
   imports =
     [
       inputs.sops-nix.nixosModules.sops
@@ -291,8 +291,8 @@ in
       Host ephemeral-build2
       Hostname localhost
       Port 3022
-      User remote-builder
-      IdentityFile /run/secrets/id_builder
+      User vm-builder
+      IdentityFile /run/secrets/vm_builder_ssh_key
       # We check the build2.vedenemo.dev key already
       StrictHostKeyChecking no
 
@@ -300,20 +300,20 @@ in
       Host ephemeral-hetzarm
       Hostname localhost
       Port 4022
-      User remote-builder
-      IdentityFile /run/secrets/id_builder
+      User vm-builder
+      IdentityFile /run/secrets/vm_builder_ssh_key
       # We check the hetzarm.vedenemo.dev key already
       StrictHostKeyChecking no
 
       Host build2.vedenemo.dev
       Hostname build2.vedenemo.dev
       User remote-build
-      IdentityFile /run/secrets/remote_build_ssh_key
+      IdentityFile /run/secrets/vedenemo_builder_ssh_key
 
       Host hetzarm.vedenemo.dev
       Hostname hetzarm.vedenemo.dev
       User remote-build
-      IdentityFile /run/secrets/remote_build_ssh_key
+      IdentityFile /run/secrets/vedenemo_builder_ssh_key
     '';
   };
 }

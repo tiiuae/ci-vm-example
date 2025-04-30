@@ -6,7 +6,7 @@
   imports = with self.nixosModules; [
     hosts-common
     user-hrosten
-    user-remote-builder
+    user-vm-builder
   ];
   networking = {
     hostName = "builder";

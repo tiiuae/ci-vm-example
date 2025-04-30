@@ -94,7 +94,7 @@ This is how it looks on a diagram after running `nix run .#run-vm-jenkins-contro
 ## Secrets
 For deployment secrets (such as ssh keys used to access the remote builders) this project uses [sops-nix](https://github.com/Mic92/sops-nix).
 
-The general idea is: each host that requires secrets have `secrets.yaml` file that contains the encrypted secrets for that host. As an example, the `secrets.yaml` file for the host jenkins-controller defines a secret [`remote_build_ssh_key`]( https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/jenkins-controller/secrets.yaml#L3) which is used by the jenkins-controller VM in [its](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/jenkins-controller/conf.nix#L47) configuration to allow ssh access on the remote builders [`build2.vedenemo.dev`](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/jenkins-controller/conf.nix#L337) and [`hetzarm.vedenemo.dev`](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/jenkins-controller/conf.nix#L342).
+The general idea is: each host that requires secrets have `secrets.yaml` file that contains the encrypted secrets for that host. As an example, the `secrets.yaml` file for the host jenkins-controller defines a secret [`vedenemo_builder_ssh_key`]( https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/jenkins-controller/secrets.yaml#L3) which is used by the jenkins-controller VM in [its](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/jenkins-controller/conf.nix#L47) configuration to allow ssh access on the remote builders [`build2.vedenemo.dev`](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/jenkins-controller/conf.nix#L337) and [`hetzarm.vedenemo.dev`](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/jenkins-controller/conf.nix#L342).
 All secrets in `secrets.yaml` can be decrypted with each host's ssh key - sops automatically decrypts the host secrets when the system activates (i.e. on boot or whenever nixos-rebuild switch occurs) and places the decrypted secrets in the configured file paths. An [admin user](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/.sops.yaml#L2-L3) manages the secrets by using the `sops` command line tool.
 
 Each host's private ssh key is also stored as [sops secret](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/jenkins-controller/secrets.yaml#L1) and automatically [depcrypted](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/nix/apps.nix#L29) on running the associated [apps target](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/nix/apps.nix#L92C19-L92C25). The decrypted `ssh_host_ed25519_key` is made available in the VM via a [directory shared between the host and guest](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/jenkins-controller/conf.nix#L58). Finally, openssh on the guest is configured to [use](https://github.com/tiiuae/ci-vm-example/blob/499b5dd5693eaac0b258a10e7861b8e1fb62227e/hosts/jenkins-controller/conf.nix#L63) the `ssh_host_ed25519_key` allowing sops to decrypt the VM secrets, by default under `/run/secrets` when the VM is booted up.
@@ -142,8 +142,8 @@ and:
 total 8
 drwxr-x--x 2 root keys   0 Mar 13 15:05 .
 drwxr-x--x 3 root keys   0 Mar 13 15:05 ..
--r-------- 1 root root 411 Mar 13 15:05 id_builder
--r-------- 1 root root 387 Mar 13 15:05 remote_build_ssh_key
+-r-------- 1 root root 411 Mar 13 15:05 vm_builder_ssh_key
+-r-------- 1 root root 387 Mar 13 15:05 vedenemo_builder_ssh_key
 ```
 
 Following sections provide some details on how to work with sops secrets. All commands are executed in nix devshell, which provides the required tools and some convenient helpers:
@@ -198,7 +198,7 @@ The above command opens an editor, where you can edit the secrets.
 Remove the example content, and replace with your secrets, so the content would look something like:
 
 ```bash
-id_builder: |
+vm_builder_ssh_key: |
     -----BEGIN OPENSSH PRIVATE KEY-----
     YOUR_BUILD_FARM_PRIVATE_KEY_HERE_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
