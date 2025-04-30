@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 
 def REPO_URL = 'https://github.com/tiiuae/ghaf-slim-demo/'
-def WORKDIR  = 'ghaf'
+def WORKDIR  = 'checkout'
 
 properties([
   githubProjectProperty(displayName: '', projectUrlStr: REPO_URL),
@@ -37,7 +37,7 @@ pipeline {
           )
           script {
             sh '''
-              FILTER='^checks.x86_64-linux.*debug$'
+              FILTER='^checks.x86_64-linux.*doc$'
               OPTS='--remote build2.vedenemo.dev --no-download --skip-cached --option accept-flake-config true'
               .github/nix-fast-build.sh -f "$FILTER" -o "$OPTS"
             '''

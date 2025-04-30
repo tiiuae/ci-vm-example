@@ -27,10 +27,18 @@ jobs:
         }
       }
   - script: >
-      pipelineJob('ghaf-slim-demo') {
+      pipelineJob('ghaf-slim-demo-cached') {
         definition {
           cps {
-            script((new File("/tmp/pipelines/ghaf-slim-demo.groovy")).text)
+            script((new File("/tmp/pipelines/ghaf-slim-demo-cached.groovy")).text)
+          }
+        }
+      }
+  - script: >
+      pipelineJob('ghaf-slim-demo-ephemeral') {
+        definition {
+          cps {
+            script((new File("/tmp/pipelines/ghaf-slim-demo-ephemeral.groovy")).text)
           }
         }
       }

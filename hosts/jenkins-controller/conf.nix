@@ -139,7 +139,8 @@ in
         until jenkins-cli ${jenkins-auth} who-am-i >/dev/null 2>&1; do sleep 1; done
         echo "Triggering pipelines"
         jenkins-cli ${jenkins-auth} build dummy -v -w
-        jenkins-cli ${jenkins-auth} build ghaf-slim-demo -v -w
+        jenkins-cli ${jenkins-auth} build ghaf-slim-demo-cached -v -w
+        jenkins-cli ${jenkins-auth} build ghaf-slim-demo-ephemeral -v -w
       '';
     serviceConfig = {
       Restart = "on-failure";
