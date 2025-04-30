@@ -42,3 +42,11 @@ jobs:
           }
         }
       }
+  - script: >
+      pipelineJob('ghaf-slim-demo-nix-build') {
+        definition {
+          cps {
+            script((new File("/tmp/pipelines/ghaf-slim-demo-nix-build.groovy")).text)
+          }
+        }
+      }

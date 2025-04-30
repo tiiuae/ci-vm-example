@@ -141,6 +141,7 @@ in
         jenkins-cli ${jenkins-auth} build dummy -v -w
         jenkins-cli ${jenkins-auth} build ghaf-slim-demo-cached -v -w
         jenkins-cli ${jenkins-auth} build ghaf-slim-demo-ephemeral -v -w
+        jenkins-cli ${jenkins-auth} build ghaf-slim-demo-nix-build -v -w
       '';
     serviceConfig = {
       Restart = "on-failure";
