@@ -64,13 +64,16 @@ in
       type = "ed25519";
     }
   ];
-
   networking = {
     hostName = "jenkins-controller";
     firewall.allowedTCPPorts = [
       8081
     ];
   };
+  # We run nix-fast-build from jenkins pipeline, which runs as jenkins user.
+  # If we want the nix-fast-build to be able to download the build results
+  # (write to local nix store), we need to make jenkins a trusted nix user.
+  nix.settings.trusted-users = [ "jenkins" ];
   services.jenkins = {
     enable = true;
     listenAddress = "0.0.0.0";

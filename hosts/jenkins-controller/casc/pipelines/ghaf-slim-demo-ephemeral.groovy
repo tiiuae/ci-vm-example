@@ -38,7 +38,7 @@ pipeline {
           script {
             sh '''
               FILTER='^checks.x86_64-linux.*doc$'
-              OPTS='--remote ephemeral-build2 --no-download'
+              OPTS='--remote ephemeral-build2'
               .github/nix-fast-build.sh -f "$FILTER" -o "$OPTS"
             '''
           }
