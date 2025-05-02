@@ -26,22 +26,19 @@
     shell = pkgs.bash;
   };
   services.getty.autologinUser = "root";
-  security.pam.loginLimits = [
-    {
-      domain = "*";
-      item = "nofile";
-      type = "-";
-      value = "32768";
-    }
-    {
-      domain = "*";
-      item = "memlock";
-      type = "-";
-      value = "32768";
-    }
-  ];
-  security.sudo.enable = true;
-  security.sudo.wheelNeedsPassword = false;
+  security = {
+    sudo.enable = true;
+    sudo.wheelNeedsPassword = false;
+    pam.loginLimits = [
+      {
+        domain = "*";
+        item = "nofile";
+        type = "-";
+        value = "32768";
+      }
+    ];
+  };
+  systemd.user.extraConfig = "DefaultLimitNOFILE=32768";
   nix = {
     channel.enable = false;
     settings = {
