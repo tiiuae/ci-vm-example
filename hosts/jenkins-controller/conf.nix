@@ -15,12 +15,12 @@ let
     local_port="$3"
     TMPWORKDIR="$(mktemp --dry-run --directory --suffix .nix-vm-builder)"
     echo "Using TMPWORKDIR '$TMPWORKDIR' on remote '$remote'"
-    on_term () {
+    on_exit () {
       set -x
       echo "Removing '$TMPWORKDIR' on '$remote'"
       ${pkgs.openssh}/bin/ssh "$remote" "rm -fr $TMPWORKDIR || echo Failed"
     }
-    trap on_term TERM
+    trap on_exit EXIT
 
     # Copy the flake source from /shared/source over to remote at TMPWORKDIR
     # so we can nix run the nix_target on remote
@@ -193,6 +193,7 @@ in
     requires = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
+      Type = "exec";
       RemainAfterExit = true;
       # Replace "no" with "always" to enable the below mentioned restart logic.
       # Restart is disabled currently to prevent fail2ban from blocking us
@@ -220,6 +221,7 @@ in
     requires = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
+      Type = "exec";
       RemainAfterExit = true;
       # Replace "no" with "always" to enable the below mentioned restart logic.
       # Restart is disabled currently to prevent fail2ban from blocking us
