@@ -19,26 +19,35 @@ unclassified:
 
 jobs:
   - script: >
-      pipelineJob('ghaf-slim-demo-cached') {
-        definition {
-          cps {
-            script((new File("/tmp/pipelines/ghaf-slim-demo-cached.groovy")).text)
+      def pipeline = new File("/tmp/pipelines/ghaf-slim-demo-cached.groovy");
+      if (pipeline.exists()) {
+        pipelineJob('ghaf-slim-demo-cached') {
+          definition {
+            cps {
+              script(pipeline.text)
+            }
           }
         }
       }
   - script: >
-      pipelineJob('ghaf-slim-demo-ephemeral') {
-        definition {
-          cps {
-            script((new File("/tmp/pipelines/ghaf-slim-demo-ephemeral.groovy")).text)
+      def pipeline = new File("/tmp/pipelines/ghaf-slim-demo-ephemeral.groovy");
+      if (pipeline.exists()) {
+        pipelineJob('ghaf-slim-demo-ephemeral') {
+          definition {
+            cps {
+              script(pipeline.text)
+            }
           }
         }
       }
   - script: >
-      pipelineJob('ghaf-slim-demo-nix-build') {
-        definition {
-          cps {
-            script((new File("/tmp/pipelines/ghaf-slim-demo-nix-build.groovy")).text)
+      def pipeline = new File("/tmp/pipelines/ghaf-slim-demo-nix-build.groovy");
+      if (pipeline.exists()) {
+        pipelineJob('ghaf-slim-demo-nix-build') {
+          definition {
+            cps {
+              script(pipeline.text)
+            }
           }
         }
       }

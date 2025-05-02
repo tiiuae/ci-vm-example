@@ -106,6 +106,16 @@ in
     script = ''
       rsync -a --perms --chmod=D700,F400 --chown=jenkins:jenkins \
         /shared/source/hosts/jenkins-controller/casc/pipelines /tmp/
+      ${
+        if ephemeralBuilders then
+          ''
+            rm /tmp/pipelines/ghaf-slim-demo-cached.groovy
+          ''
+        else
+          ''
+            rm /tmp/pipelines/ghaf-slim-demo-ephemeral.groovy
+          ''
+      }
     '';
   };
 
