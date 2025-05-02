@@ -49,7 +49,7 @@
         "nix-command"
         "flakes"
       ];
-      connect-timeout = 5;
+      connect-timeout = 10;
       log-lines = lib.mkDefault 25;
       trusted-users = [ "@wheel" ];
     };
