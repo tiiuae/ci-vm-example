@@ -19,14 +19,6 @@ unclassified:
 
 jobs:
   - script: >
-      pipelineJob('dummy') {
-        definition {
-          cps {
-            script((new File("/tmp/pipelines/dummy.groovy")).text)
-          }
-        }
-      }
-  - script: >
       pipelineJob('ghaf-slim-demo-cached') {
         definition {
           cps {
