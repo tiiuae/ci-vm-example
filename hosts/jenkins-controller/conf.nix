@@ -286,8 +286,9 @@ in
     ${
       if ephemeralBuilders then
         ''
-          trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
-          substituters = https://cache.nixos.org
+          substituters = none
+          trusted-public-keys = none
+          substitute = false
           builders-use-substitutes = false
         ''
       else
