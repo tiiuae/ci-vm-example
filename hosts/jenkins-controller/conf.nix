@@ -119,31 +119,37 @@ in
     postStart =
       let
         jenkins-auth = "-auth admin:\"$(cat /var/lib/jenkins/secrets/initialAdminPassword)\"";
-        # Disable setup wizard
-        jenkins-groovy = pkgs.writeText "groovy" ''
+        # Disable setup wizard and restart
+        jenkins-init = pkgs.writeText "groovy" ''
           #!groovy
           import jenkins.model.*
-          import hudson.util.*
           import jenkins.install.*
-          def instance = Jenkins.getInstance()
-          instance.setInstallState(InstallState.INITIAL_SETUP_COMPLETED)
-          instance.save()
-          instance.restart()
+          Jenkins.getInstance().setInstallState(InstallState.INITIAL_SETUP_COMPLETED)
+          Jenkins.getInstance().save()
+          Jenkins.getInstance().restart()
+        '';
+        # Trigger all pipelines
+        jenkins-trigger-all = pkgs.writeText "groovy" ''
+          #!groovy
+          import jenkins.model.*
+          import hudson.model.*
+          for (job in Jenkins.getInstance().getAllItems(Job)) {
+            println("Triggering job: " + job.getName())
+            job.scheduleBuild(0);
+          }
         '';
       in
       ''
         echo "Waiting jenkins to become online"
         until jenkins-cli ${jenkins-auth} who-am-i >/dev/null 2>&1; do sleep 1; done
         echo "Disable setup wizard and restart jenkins"
-        jenkins-cli ${jenkins-auth} groovy = < ${jenkins-groovy}
+        jenkins-cli ${jenkins-auth} groovy = < ${jenkins-init}
         echo "Waiting jenkins to shutdown"
         until ! jenkins-cli ${jenkins-auth} who-am-i >/dev/null 2>&1; do sleep 1; done
         echo "Waiting jenkins to restart"
         until jenkins-cli ${jenkins-auth} who-am-i >/dev/null 2>&1; do sleep 1; done
-        echo "Triggering pipelines"
-        jenkins-cli ${jenkins-auth} build ghaf-slim-demo-cached -v -w
-        jenkins-cli ${jenkins-auth} build ghaf-slim-demo-ephemeral -v -w
-        jenkins-cli ${jenkins-auth} build ghaf-slim-demo-nix-build -v -w
+        echo "Triggering jenkins jobs"
+        jenkins-cli ${jenkins-auth} groovy = < ${jenkins-trigger-all}
       '';
     serviceConfig = {
       Restart = "on-failure";
