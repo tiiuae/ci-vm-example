@@ -7,6 +7,7 @@ properties([
   githubProjectProperty(displayName: '', projectUrlStr: REPO_URL),
   parameters([
     string(name: 'GITREF', defaultValue: 'main', description: 'Git reference (Commit/Branch/Tag)'),
+    string(name: 'FILTER', defaultValue: '^checks.x86_64-linux.*doc$', description: 'Regex to filter the build target flake outputs'),
     booleanParam(name: 'RELOAD_ONLY', defaultValue: true, description: 'Reload pipeline configuration without running any other stages')
   ])
 ])
@@ -36,8 +37,8 @@ pipeline {
             userRemoteConfigs: [[url: REPO_URL]]
           )
           script {
+            env.FILTER = "${params.FILTER}"
             sh '''
-              FILTER='^checks.x86_64-linux.*doc$'
               OPTS='--remote ephemeral-build2'
               .github/nix-fast-build.sh -f "$FILTER" -o "$OPTS"
             '''
