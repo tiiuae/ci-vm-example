@@ -1,6 +1,6 @@
 # ci-vm-example
 
-Proof-of-conecpt to trial the following:
+Proof-of-concept to trial the following:
 - Using flake app targets to run nixos configurations as [qemu-vm.nix](https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/virtualisation/qemu-vm.nix) virtual machines (VMs)
 - Using [sops-nix](https://github.com/Mic92/sops-nix) to automatically deploy secrets on the running VMs
 - Spin-up a complete ephemeral build environment using qemu VMs over an existing infra
@@ -115,7 +115,7 @@ Group 0: FAILED
       | /home/me/.config/sops/age/keys.txt: no such file or
       | directory
 
-  age1hc6hszepd5xezxkgd3yx74pn3scxjm5w6px48m4rq9yj7w6rke7q72zhgn: FAILED
+  age1hc6hszepd5xezxkgd3yx74on3scxjm5w6px48m4rq9yj7w6rke7q72zhgn: FAILED
     - | failed to load age identities: failed to open file: open
       | /home/me/.config/sops/age/keys.txt: no such file or
       | directory
@@ -177,7 +177,7 @@ Add the above age public key to the `.sops.yaml` with your username.
 
 ```bash
 # Run in nix devshell on your host
-# generate a new ssh server key for the taget system:
+# generate a new ssh server key for the target system:
 ssh-keygen -t ed25519 -a 100 -C mytarget -f ~/.ssh/mytarget_id_ed25519
 # print the host age public key
 $ ssh-to-age < ~/.ssh/mytarget_id_ed25519.pub
