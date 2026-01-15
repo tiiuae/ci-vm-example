@@ -19,9 +19,4 @@
     "-device virtio-balloon"
     "-enable-kvm"
   ];
-  virtualisation.vmVariant.zramSwap = {
-    enable = true;
-    algorithm = "zstd";
-    memoryPercent = 100;
-  };
 }
