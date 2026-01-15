@@ -13,7 +13,7 @@
         programs = {
           nixfmt = {
             enable = true;
-            package = pkgs.nixfmt-rfc-style;
+            package = pkgs.nixfmt;
             excludes = [ "**/plugins.nix" ]; # file is automatically generated
           };
           deadnix.enable = true;

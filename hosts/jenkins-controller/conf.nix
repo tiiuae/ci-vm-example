@@ -45,14 +45,13 @@ in
   sops.defaultSopsFile = ./secrets.yaml;
   sops.secrets.vm_builder_ssh_key.owner = "jenkins";
   sops.secrets.vedenemo_builder_ssh_key.owner = "jenkins";
-  imports =
-    [
-      inputs.sops-nix.nixosModules.sops
-    ]
-    ++ (with self.nixosModules; [
-      hosts-common
-      user-hrosten
-    ]);
+  imports = [
+    inputs.sops-nix.nixosModules.sops
+  ]
+  ++ (with self.nixosModules; [
+    hosts-common
+    user-hrosten
+  ]);
 
   virtualisation.vmVariant.virtualisation.sharedDirectories.shr = {
     source = "$HOME/.config/vmshared/jenkins-controller";
