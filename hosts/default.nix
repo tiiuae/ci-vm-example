@@ -39,8 +39,8 @@ in
       modules = [
         (import ./vm-nixos-qemu.nix {
           disk_gb = 300;
-          vcpus = 50;
-          ram_gb = 100;
+          vcpus = 40;
+          ram_gb = 40;
         })
         self.nixosModules.nixos-builder
         {
