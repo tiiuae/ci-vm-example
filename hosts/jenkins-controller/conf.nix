@@ -39,6 +39,18 @@ let
       nix run --refresh .#"$nix_target";\
     ";
   '';
+  pipelines = [
+    "ghaf-manual"
+  ];
+  # copies only pipelines declared in pipelines[]
+  filteredPipelines = pkgs.runCommand "pipelines" { } ''
+    mkdir -p $out
+    cp -r ${./pipelines}/modules $out/
+
+    ${pkgs.lib.concatMapStringsSep "\n" (name: ''
+      cp ${./pipelines}/${name}.groovy "$out/"
+    '') pipelines}
+  '';
 in
 {
   sops.defaultSopsFile = ./secrets.yaml;
@@ -80,6 +92,7 @@ in
     packages = with pkgs; [
       bashInteractive # 'sh' step in jenkins pipeline requires this
       coreutils
+      colorized-logs
       git
       nix
       openssh
@@ -120,81 +133,37 @@ in
       builtins.listToAttrs (map mkJenkinsPlugin manifest);
   };
 
-  systemd.services.jenkins-pipeline-copy = {
+  environment.etc = lib.mkMerge [
+    {
+      "jenkins/pipelines".source = filteredPipelines;
+      "jenkins/casc/common.yaml".source = ./casc/common.yaml;
+    }
+  ];
+
+  systemd.services.jenkins = {
+    serviceConfig = {
+      Restart = "on-failure";
+    };
+  };
+
+  # Remove all config files from jenkins home before loading the casc.
+  # This ensures there's no lingering config from the past,
+  # and only what is in the casc is regenerated
+  systemd.services.jenkins-config-cleanup = {
     before = [ "jenkins.service" ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
-      Restart = "on-failure";
-      RestartSec = 5;
+      Type = "oneshot";
+      User = "jenkins";
+      WorkingDirectory = "/var/lib/jenkins";
     };
-    path = with pkgs; [ rsync ];
-    script = ''
-      rsync -a --perms --chmod=D700,F400 --chown=jenkins:jenkins \
-        /shared/source/hosts/jenkins-controller/casc/pipelines /tmp/
-      ${
-        if ephemeralBuilders then
-          ''
-            rm /tmp/pipelines/ghaf-slim-demo-cached.groovy
-          ''
-        else
-          ''
-            rm /tmp/pipelines/ghaf-slim-demo-ephemeral.groovy
-          ''
-      }
-    '';
-  };
-
-  systemd.services.jenkins = {
-    # Make `jenkins-cli` available
-    path = with pkgs; [ jenkins ];
-    # Implicit URL parameter for `jenkins-cli`
-    environment = {
-      JENKINS_URL = "http://localhost:8081";
-    };
-    postStart =
-      let
-        jenkins-auth = "-auth admin:\"$(cat /var/lib/jenkins/secrets/initialAdminPassword)\"";
-        # Disable setup wizard and restart
-        jenkins-init = pkgs.writeText "groovy" ''
-          #!groovy
-          import jenkins.model.*
-          import jenkins.install.*
-          Jenkins.getInstance().setInstallState(InstallState.INITIAL_SETUP_COMPLETED)
-          Jenkins.getInstance().save()
-          Jenkins.getInstance().restart()
-        '';
-        # Trigger all pipelines
-        jenkins-trigger-all = pkgs.writeText "groovy" ''
-          #!groovy
-          import jenkins.model.*
-          import hudson.model.*
-          for (job in Jenkins.getInstance().getAllItems(Job)) {
-            println("Triggering job: " + job.getName())
-            job.scheduleBuild(0);
-          }
-        '';
-      in
+    script = # sh
       ''
-        echo "Waiting jenkins to become online"
-        until jenkins-cli ${jenkins-auth} who-am-i >/dev/null 2>&1; do sleep 1; done
-        echo "Disable setup wizard and restart jenkins"
-        jenkins-cli ${jenkins-auth} groovy = < ${jenkins-init}
-        echo "Waiting jenkins to shutdown"
-        until ! jenkins-cli ${jenkins-auth} who-am-i >/dev/null 2>&1; do sleep 1; done
-        echo "Waiting jenkins to restart"
-        until jenkins-cli ${jenkins-auth} who-am-i >/dev/null 2>&1; do sleep 1; done
-        echo "Triggering jenkins jobs"
-        jenkins-cli ${jenkins-auth} groovy = < ${jenkins-trigger-all}
+        rm -f *.xml
+        rm -f nodes/*/config.xml
+        rm -f jobs/*/config.xml
       '';
-    serviceConfig = {
-      Restart = "on-failure";
-    };
   };
-
-  # set StateDirectory=jenkins, so state volume has the right permissions
-  # and we wait on the mountpoint to appear.
-  # https://github.com/NixOS/nixpkgs/pull/272679
-  systemd.services.jenkins.serviceConfig.StateDirectory = "jenkins";
 
   systemd.services.populate-builder-machines = {
     wantedBy = [ "multi-user.target" ];
@@ -215,12 +184,12 @@ in
       ${
         if ephemeralBuilders then
           ''
-            echo "ssh://ephemeral-build2 x86_64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >/etc/nix/machines
+            echo "ssh://ephemeral-builder x86_64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >/etc/nix/machines
             echo "ssh://ephemeral-hetzarm aarch64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >>/etc/nix/machines
           ''
         else
           ''
-            echo "ssh://build2.vedenemo.dev x86_64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >/etc/nix/machines
+            echo "ssh://builder.vedenemo.dev x86_64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >/etc/nix/machines
             echo "ssh://hetzarm.vedenemo.dev aarch64-linux - 20 10 kvm,nixos-test,benchmark,big-parallel" >>/etc/nix/machines
           ''
       }
@@ -247,7 +216,7 @@ in
       StartLimitIntervalSec = 240;
     };
     script = ''
-      remote="build2.vedenemo.dev"
+      remote="builder.vedenemo.dev"
       nix_target="apps.x86_64-linux.run-vm-builder"
       local_port="3022"
       ${run-builder-vm} "$remote" "$nix_target" "$local_port"
@@ -326,20 +295,20 @@ in
   programs.ssh = {
 
     # Known builder host public keys, these go to /root/.ssh/known_hosts
-    knownHosts."build2.vedenemo.dev".publicKey =
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILL40b7SbAcL1MK3D5U9IgVRR87myFLTzVdryQnVqb7p";
+    knownHosts."builder.vedenemo.dev".publicKey =
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG68NdmOw3mhiBZwDv81dXitePoc1w//p/LpsHHA8QRp";
     knownHosts."hetzarm.vedenemo.dev".publicKey =
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILx4zU4gIkTY/1oKEOkf9gTJChdx/jR3lDgZ7p/c7LEK";
 
     # Custom options to /etc/ssh/ssh_config
     extraConfig = lib.mkAfter ''
-      # VM we spin-up on build2.vedenemo.dev with builder-vm-x86-start service
-      Host ephemeral-build2
+      # VM we spin-up on builder.vedenemo.dev with builder-vm-x86-start service
+      Host ephemeral-builder
       Hostname localhost
       Port 3022
       User vm-builder
       IdentityFile /run/secrets/vm_builder_ssh_key
-      # We check the build2.vedenemo.dev key already
+      # We check the builder.vedenemo.dev key already
       StrictHostKeyChecking no
 
       # VM we spin-up on hetzarm.vedenemo.dev with builder-vm-aarch-start service
@@ -351,8 +320,8 @@ in
       # We check the hetzarm.vedenemo.dev key already
       StrictHostKeyChecking no
 
-      Host build2.vedenemo.dev
-      Hostname build2.vedenemo.dev
+      Host builder.vedenemo.dev
+      Hostname builder.vedenemo.dev
       User remote-build
       IdentityFile /run/secrets/vedenemo_builder_ssh_key
 
