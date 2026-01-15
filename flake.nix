@@ -6,12 +6,6 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-root.url = "github:srid/flake-root";
     flake-utils.url = "github:numtide/flake-utils";
-    devshell = {
-      url = "github:numtide/devshell";
-      inputs = {
-        nixpkgs.follows = "nixpkgs";
-      };
-    };
     sops-nix = {
       url = "github:mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -19,12 +13,6 @@
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
-    };
-    jenkinsPlugins2nix = {
-      url = "github:Fuuzetsu/jenkinsPlugins2nix";
-      inputs = {
-        flake-utils.follows = "flake-utils";
-      };
     };
   };
 
