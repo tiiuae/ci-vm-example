@@ -12,7 +12,6 @@ pipeline-graph-view
 pipeline-stage-view
 pipeline-utility-steps
 reverse-proxy-auth-plugin
-robot
 timestamper
 uno-choice
 workflow-aggregator
