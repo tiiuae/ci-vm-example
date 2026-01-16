@@ -280,8 +280,8 @@ in
     ${
       if ephemeralBuilders then
         ''
-          trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
-          substituters = https://cache.nixos.org
+          trusted-public-keys = ghaf-release.cachix.org-1:wvnAftt8aSJ5KukTQb+BvvZYqJ5qzWEk/QHMbn2o+Ag= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+          substituters = https://ghaf-release.cachix.org https://cache.nixos.org
           builders-use-substitutes = false
         ''
       else
